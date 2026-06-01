@@ -539,7 +539,10 @@ function AFHCDashboard() {
   const [sRates, setSRates] = useState(SECONDARY_PLANS);
   const [lRates, setLRates] = useState(LIFE_PLANS);
   const [estBase, setEstBase] = useState(500);
-  const [dashMonth, setDashMonth] = useState("all");
+  const [dashMonth, setDashMonth] = useState(() => {
+    const n = new Date();
+    return n.toLocaleString("default", { month: "short", year: "numeric" });
+  });
   const [showExpenses, setShowExpenses] = useState(false);
   const [expenses, setExpenses] = useState({ leadCost: 0, otherCost: 0 });
   const totalExpenses = expenses.leadCost + expenses.otherCost;
@@ -2142,7 +2145,16 @@ function AFHCDashboard() {
     value: ""
   }, "\u2014"), STATES.map(s => /*#__PURE__*/React.createElement("option", {
     key: s
-  }, s)))))), /*#__PURE__*/React.createElement("div", {
+  }, s)))), /*#__PURE__*/React.createElement(Field, {
+    label: "Date of Birth",
+    hint: "Auto-calculates age",
+    w: 140
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    style: inp,
+    value: f.dob,
+    onChange: e => set("dob", e.target.value)
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "sect"
   }, /*#__PURE__*/React.createElement("div", {
     className: "sect-h"
