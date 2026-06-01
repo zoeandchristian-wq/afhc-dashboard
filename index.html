@@ -1015,7 +1015,6 @@ function AFHCDashboard() {
     const t = new Date(d.ds);
     return (now - t) / 864e5 <= 7 && now - t >= 0;
   }).length : sold.filter(inMonth).length;
-  const soldMonth = filteredSold ? filteredSold.length : sold.filter(inMonth).length;
   const dashLabel = dashMonth === "all" ? "All Time" : dashMonth;
   const filteredDeals = dashMonth === "all" ? deals : deals.filter(d => {
     const ds = d.ds || d.dp;
@@ -1024,6 +1023,7 @@ function AFHCDashboard() {
     return t.toLocaleString("default", { month: "short", year: "numeric" }) === dashMonth;
   });
   const filteredSold = filteredDeals.filter(d => d.status === "Sold");
+  const soldMonth = filteredSold.length;
   const closeRate = filteredDeals.length ? Math.round(filteredSold.length / filteredDeals.length * 100) : 0;
 
   // display-only animated mirrors
