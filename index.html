@@ -1010,14 +1010,21 @@ function AFHCDashboard() {
   };
   const monthComm = sold.filter(inMonth).reduce((s, d) => s + comm(d), 0);
   const goalPct = Math.min(100, Math.round(monthComm / GOAL * 100));
-  const soldWeek = sold.filter(d => {
+  const soldWeek = dashMonth === "all" ? sold.filter(d => {
     if (!d.ds) return false;
     const t = new Date(d.ds);
     return (now - t) / 864e5 <= 7 && now - t >= 0;
-  }).length;
-  const soldMonth = sold.filter(inMonth).length;
+  }).length : sold.filter(inMonth).length;
+  const soldMonth = filteredSold ? filteredSold.length : sold.filter(inMonth).length;
   const dashLabel = dashMonth === "all" ? "All Time" : dashMonth;
-  const closeRate = deals.length ? Math.round(sold.length / deals.length * 100) : 0;
+  const filteredDeals = dashMonth === "all" ? deals : deals.filter(d => {
+    const ds = d.ds || d.dp;
+    if (!ds) return false;
+    const t = new Date(ds);
+    return t.toLocaleString("default", { month: "short", year: "numeric" }) === dashMonth;
+  });
+  const filteredSold = filteredDeals.filter(d => d.status === "Sold");
+  const closeRate = filteredDeals.length ? Math.round(filteredSold.length / filteredDeals.length * 100) : 0;
 
   // display-only animated mirrors
   const aComm = Math.round(useCountUp(monthComm));
@@ -1098,13 +1105,35 @@ function AFHCDashboard() {
   const aAVMonth = Math.round(useCountUp(avMonth.total));
   const aAVWeek = Math.round(useCountUp(avWeek.total));
   const repDate = d => d.ds || d.dp || "";
-  const monthsAvail = [...new Set(deals.map(d => repDate(d).slice(0, 7)).filter(Boolean))].sort().reverse();
+  const monthsAvail = [...new Set(deals.filter(d => d.ds).map(d => {
+    const t = new Date(d.ds);
+    return t.toLocaleString("default", { month: "short", year: "numeric" });
+  }).filter(Boolean))].sort((a, b) => new Date("1 " + b) - new Date("1 " + a));
   const statesAvail = [...new Set(deals.map(d => d.state).filter(Boolean))].sort();
   const mLabel = m => new Date(m + "-01T00:00").toLocaleDateString(undefined, {
     month: "short",
     year: "numeric"
   });
-  const shown = deals.filter(d => (filter === "All" || d.status === filter) && (fMonth === "All" || repDate(d).slice(0, 7) === fMonth) && (fState === "All" || d.state === fState));
+  const shown = deals.filter(d => {
+    if (filter !== "All" && d.status !== filter) return false;
+    if (fState !== "All" && d.state !== fState) return false;
+    if (fMonth !== "All" && repDate(d).slice(0, 7) !== fMonth) return false;
+    if (view === "dashboard" && dashMonth !== "all") {
+      if (!d.ds) return false;
+      const t = new Date(d.ds);
+      const label = t.toLocaleString("default", { month: "short", year: "numeric" });
+      if (label !== dashMonth) return false;
+    }
+    return true;
+  });
+  // Dashboard deals list filtered by selected month
+  const shownDash = deals.filter(d => {
+    if (!d.ds) return false;
+    if (dashMonth === "all") return true;
+    const t = new Date(d.ds);
+    const label = t.toLocaleString("default", { month: "short", year: "numeric" });
+    return label === dashMonth;
+  });
   const RateBlock = ({
     title,
     list,
@@ -1794,17 +1823,20 @@ function AFHCDashboard() {
     style: {
       gridColumn: "1 / -1",
       display: "flex",
-      justifyContent: "flex-end",
-      marginBottom: -8
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: -4
     }
   }, /*#__PURE__*/React.createElement("div", {
-    style: { display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,.12)", borderRadius: 10, padding: "6px 12px" }
+    style: { fontSize: 12, color: "rgba(255,255,255,.6)", fontWeight: 600, letterSpacing: .5, textTransform: "uppercase" }
+  }, dashMonth === "all" ? "All Time" : dashMonth), /*#__PURE__*/React.createElement("div", {
+    style: { display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,.15)", borderRadius: 20, padding: "6px 14px" }
   }, /*#__PURE__*/React.createElement("span", {
-    style: { fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.7)", textTransform: "uppercase", letterSpacing: .8 }
-  }, "View Month"), /*#__PURE__*/React.createElement("select", {
+    style: { fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.8)", textTransform: "uppercase", letterSpacing: .8 }
+  }, "Month"), /*#__PURE__*/React.createElement("select", {
     value: dashMonth,
     onChange: e => setDashMonth(e.target.value),
-    style: { border: "none", background: "transparent", fontWeight: 700, color: "#fff", fontSize: 13, cursor: "pointer" }
+    style: { border: "none", background: "transparent", fontWeight: 700, color: "#fff", fontSize: 13, cursor: "pointer", outline: "none" }
   }, /*#__PURE__*/React.createElement("option", { value: "all" }, "All Time"), monthsAvail.map(m => /*#__PURE__*/React.createElement("option", { key: m, value: m }, m)))))), /*#__PURE__*/React.createElement("div", {
     className: "goal-card"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1857,7 +1889,7 @@ function AFHCDashboard() {
       flexDirection: "column",
       gap: 16
     }
-  }, [["Sold This Week", aWeek, C.red], [`Sold · ${now.toLocaleString("default",{month:"short"})}`, aMonth, C.navy]].map(([l, v, a]) => /*#__PURE__*/React.createElement("div", {
+  }, [["Sold This Week", aWeek, C.red], [dashMonth === "all" ? "Sold This Week" : `Sold · ${dashMonth}`, aMonth, C.navy]].map(([l, v, a]) => /*#__PURE__*/React.createElement("div", {
     key: l,
     className: "kpi-card lift",
     style: {
