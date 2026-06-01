@@ -2541,15 +2541,6 @@ function AFHCDashboard() {
   }, ["Sold", "Pitched", "Lost"].map(s => /*#__PURE__*/React.createElement("option", {
     key: s
   }, s)))), /*#__PURE__*/React.createElement(Field, {
-    label: "Date of Birth",
-    hint: "Auto-calculates age",
-    w: 140
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "date",
-    style: inp,
-    value: f.dob,
-    onChange: e => set("dob", e.target.value)
-  })), /*#__PURE__*/React.createElement(Field, {
     label: "Date Pitched",
     req: f.status !== "Sold",
     w: 138
