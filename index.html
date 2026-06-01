@@ -717,19 +717,26 @@ function AFHCDashboard() {
     transition: "border-color .15s, box-shadow .15s"
   };
   const set = (k, v) => setF(p => {
-    const n = {
-      ...p,
-      [k]: v
-    };
+    const n = { ...p, [k]: v };
+    const age = n.dob ? calcAge(n.dob) : null;
+    // Recalc secondary commissions when state or dob changes
+    if (k === "state" || k === "dob") {
+      n.secs = n.secs.map(row => {
+        const r = sRates.find(o => o.plan === row.plan);
+        if (r && row.prem) row = { ...row, comm: est(r.rate, parseFloat(row.prem), Object.assign({}, r, {plan: row.plan}), 9, n.state, age, r.term) };
+        return row;
+      });
+    }
     if (k === "pPlan" || k === "pPremPriv") {
       const r = pRates.find(o => o.plan === n.pPlan);
       if (r) {
-        if (r.flat != null) n.pComm = r.flat;else if (r.rate) n.pComm = est(r.rate, parseFloat(n.pPremPriv));
+        if (r.flat != null) n.pComm = r.flat;
+        else if (r.rate) n.pComm = est(r.rate, parseFloat(n.pPremPriv), r, 9, n.state, age);
       }
     }
     if (k === "lPlan" || k === "lPrem") {
       const r = lRates.find(o => o.plan === n.lPlan);
-      if (r && r.rate) n.lComm = est(r.rate, parseFloat(n.lPrem));
+      if (r && r.rate) n.lComm = est(r.rate, parseFloat(n.lPrem), r, 9);
     }
     return n;
   });
@@ -742,7 +749,7 @@ function AFHCDashboard() {
       };
       if (k === "plan" || k === "prem") {
         const r = sRates.find(o => o.plan === nr.plan);
-        if (r && r.rate) nr.comm = est(r.rate, parseFloat(nr.prem));
+        if (r) { var age = p.dob ? calcAge(p.dob) : null; nr.comm = est(r.rate, parseFloat(nr.prem), Object.assign({}, r, {plan: nr.plan}), 9, p.state, age, r.term); }
       }
       return nr;
     });
@@ -1728,7 +1735,7 @@ function AFHCDashboard() {
       color: C.gold,
       fontWeight: 700
     }
-  }, "Monthly Commission \xB7 Goal ", money(GOAL)), /*#__PURE__*/React.createElement("div", {
+  }, `Monthly Commission \xB7 ${now.toLocaleString("default",{month:"long"})} \xB7 Goal `, money(GOAL)), /*#__PURE__*/React.createElement("div", {
     className: "serif",
     style: {
       fontSize: 44,
@@ -1761,7 +1768,7 @@ function AFHCDashboard() {
       flexDirection: "column",
       gap: 16
     }
-  }, [["Sold This Week", aWeek, C.red], ["Sold This Month", aMonth, C.navy]].map(([l, v, a]) => /*#__PURE__*/React.createElement("div", {
+  }, [["Sold This Week", aWeek, C.red], [`Sold · ${now.toLocaleString("default",{month:"short"})}`, aMonth, C.navy]].map(([l, v, a]) => /*#__PURE__*/React.createElement("div", {
     key: l,
     className: "kpi-card lift",
     style: {
