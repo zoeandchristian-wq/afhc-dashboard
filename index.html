@@ -1105,10 +1105,11 @@ function AFHCDashboard() {
   const aAVMonth = Math.round(useCountUp(avMonth.total));
   const aAVWeek = Math.round(useCountUp(avWeek.total));
   const repDate = d => d.ds || d.dp || "";
-  const monthsAvail = [...new Set(deals.filter(d => d.ds).map(d => {
+  const currentMonthLabel = now.toLocaleString("default", { month: "short", year: "numeric" });
+  const monthsAvail = [...new Set([currentMonthLabel, ...deals.filter(d => d.ds).map(d => {
     const t = new Date(d.ds);
     return t.toLocaleString("default", { month: "short", year: "numeric" });
-  }).filter(Boolean))].sort((a, b) => new Date("1 " + b) - new Date("1 " + a));
+  }).filter(Boolean)])].sort((a, b) => new Date("1 " + b) - new Date("1 " + a));
   const statesAvail = [...new Set(deals.map(d => d.state).filter(Boolean))].sort();
   const mLabel = m => new Date(m + "-01T00:00").toLocaleDateString(undefined, {
     month: "short",
@@ -1828,15 +1829,15 @@ function AFHCDashboard() {
       marginBottom: -4
     }
   }, /*#__PURE__*/React.createElement("div", {
-    style: { fontSize: 12, color: "rgba(255,255,255,.6)", fontWeight: 600, letterSpacing: .5, textTransform: "uppercase" }
+    style: { fontSize: 12, color: "#13294A", fontWeight: 700, letterSpacing: .5, textTransform: "uppercase" }
   }, dashMonth === "all" ? "All Time" : dashMonth), /*#__PURE__*/React.createElement("div", {
-    style: { display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,.15)", borderRadius: 20, padding: "6px 14px" }
+    style: { display: "flex", alignItems: "center", gap: 8, background: "#fff", borderRadius: 20, padding: "6px 14px", border: "1px solid rgba(200,162,75,.4)" }
   }, /*#__PURE__*/React.createElement("span", {
-    style: { fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.8)", textTransform: "uppercase", letterSpacing: .8 }
+    style: { fontSize: 11, fontWeight: 700, color: "#13294A", textTransform: "uppercase", letterSpacing: .8 }
   }, "Month"), /*#__PURE__*/React.createElement("select", {
     value: dashMonth,
     onChange: e => setDashMonth(e.target.value),
-    style: { border: "none", background: "transparent", fontWeight: 700, color: "#fff", fontSize: 13, cursor: "pointer", outline: "none" }
+    style: { border: "none", background: "rgba(255,255,255,.2)", fontWeight: 700, color: "#13294A", fontSize: 13, cursor: "pointer", outline: "none", borderRadius: 6, padding: "3px 6px" }
   }, /*#__PURE__*/React.createElement("option", { value: "all" }, "All Time"), monthsAvail.map(m => /*#__PURE__*/React.createElement("option", { key: m, value: m }, m)))))), /*#__PURE__*/React.createElement("div", {
     className: "goal-card"
   }, /*#__PURE__*/React.createElement("div", {
