@@ -196,40 +196,40 @@ const PRIMARY_PLANS = [
 ];
 const SECONDARY_PLANS = [
   // MOO Critical Illness (5 terms)
-  { plan: "M.O.O. Critical Illness - Lifetime", rate: 77, advMonths: 9 },
-  { plan: "M.O.O. Critical Illness - 30T", rate: 77, advMonths: 9 },
-  { plan: "M.O.O. Critical Illness - 20T", rate: 77, advMonths: 9 },
-  { plan: "M.O.O. Critical Illness - 15T", rate: 68, advMonths: 9 },
-  { plan: "M.O.O. Critical Illness - 10T", rate: 59, advMonths: 9 },
+  { plan: "M.O.O. Critical Illness - Lifetime", mooState: true, term: "lifetime" },
+  { plan: "M.O.O. Critical Illness - 30T", mooState: true, term: "30T" },
+  { plan: "M.O.O. Critical Illness - 20T", mooState: true, term: "20T" },
+  { plan: "M.O.O. Critical Illness - 15T", mooState: true, term: "15T" },
+  { plan: "M.O.O. Critical Illness - 10T", mooState: true, term: "10T" },
   // MOO Other
   { plan: "M.O.O Dental + Vision", rate: null },
-  { plan: "M.O.O Hospital Indemnity", rate: 56, advMonths: 9 },
-  { plan: "M.O.O. Dental", rate: 45, advMonths: 9 },
+  { plan: "M.O.O Hospital Indemnity", mooState: true },
+  { plan: "M.O.O. Dental", mooState: true },
   // UH1 Dental
-  { plan: "UH-one Dental Gen", rate: 30, advMonths: 9 },
-  { plan: "UH-one Dental Primary", rate: 18, advMonths: 9 },
-  { plan: "UH-one Dental Premier", rate: 30, advMonths: 9 },
-  { plan: "UH-one DentalWise Basic", rate: 21, advMonths: 9 },
-  { plan: "UH-one DentalWise 1000", rate: 33, advMonths: 9 },
-  { plan: "UH-one DentalWise 2000", rate: 33, advMonths: 9 },
-  { plan: "UH-one DentalWise Max", rate: 33, advMonths: 9 },
+  { plan: "UH-one Dental Gen", uh1: true, advMonths: 9 },
+  { plan: "UH-one Dental Primary", uh1: true, advMonths: 9 },
+  { plan: "UH-one Dental Premier", uh1: true, advMonths: 9 },
+  { plan: "UH-one DentalWise Basic", uh1: true, advMonths: 9 },
+  { plan: "UH-one DentalWise 1000", uh1: true, advMonths: 9 },
+  { plan: "UH-one DentalWise 2000", uh1: true, advMonths: 9 },
+  { plan: "UH-one DentalWise Max", uh1: true, advMonths: 9 },
   // UH1 Vision
-  { plan: "UH-one Vision Standalone", rate: 18, noAdv: true },
-  { plan: "UH-one VisionWise Premier", rate: 33, noAdv: true },
+  { plan: "UH-one Vision Standalone", uh1: true, noAdv: true },
+  { plan: "UH-one VisionWise Premier", uh1: true, noAdv: true },
   // UH1 Critical Illness
-  { plan: "UH-one CriticalGuard Under 25k", rate: 36, noAdv: true },
-  { plan: "UH-one CriticalGuard 25k Plus", rate: 45, noAdv: true },
+  { plan: "UH-one CriticalGuard Under 25k", uh1: true, noAdv: true },
+  { plan: "UH-one CriticalGuard 25k Plus", uh1: true, noAdv: true },
   // UH1 Accident
-  { plan: "UH-one Accident ExpenseGuard (82 wks)", rate: 30, advMonths: 9 },
-  { plan: "UH-one AccidentWise 10k", rate: 27, advMonths: 9 },
-  { plan: "UH-one AccidentWise 15k", rate: 30, advMonths: 9 },
-  { plan: "UH-one AccidentWise 20k", rate: 30, advMonths: 9 },
-  { plan: "UH-one Accident SafeGuard", rate: 24, noAdv: true },
+  { plan: "UH-one Accident ExpenseGuard (82 wks)", uh1: true, advMonths: 9 },
+  { plan: "UH-one AccidentWise 10k", uh1: true, advMonths: 9 },
+  { plan: "UH-one AccidentWise 15k", uh1: true, advMonths: 9 },
+  { plan: "UH-one AccidentWise 20k", uh1: true, advMonths: 9 },
+  { plan: "UH-one Accident SafeGuard", uh1: true, noAdv: true },
   // UH1 Fixed Indemnity
-  { plan: "UH-one Health Protector Guard", rate: 22.75, advMonths: 9 },
-  { plan: "UH-one Hospital SafeGuard GI", rate: 24, noAdv: true },
-  { plan: "UH-one Hospitalwise", rate: 33, advMonths: 9 },
-  { plan: "UH-one Advantage Guard", rate: 46.25, advMonths: 9 },
+  { plan: "UH-one Health Protector Guard", uh1: true, advMonths: 9 },
+  { plan: "UH-one Hospital SafeGuard GI", uh1: true, noAdv: true },
+  { plan: "UH-one Hospitalwise", uh1: true, advMonths: 9 },
+  { plan: "UH-one Advantage Guard", uh1: true, advMonths: 9 },
   // UH1 Term Life & Other
   { plan: "UH-one Term Life", rate: null },
   { plan: "Americo", rate: null },
@@ -254,7 +254,93 @@ function calcAge(dob) {
   if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) age--;
   return age;
 }
-const est = (rate, prem) => rate && prem ? Math.round((rate / 100) * prem * 9) : 0; // 9-month advance
+// UH1 commission rates: [std_18_59, std_60_64, r1_18_59, r1_60_64, ...]
+var _uh1 = {
+  "UH-one Health Protector Guard":         { std:[22.75,9.00], r1:[19.75,6.00], r2:[13.75,3.00], r1s:["CO","FL","VA"], r2s:["MN"] },
+  "UH-one Hospital SafeGuard GI":          { std:[24.00,9.00], r1:[19.25,6.50], r2:[18.00,4.25], r3:[15.00,1.25], r1s:["FL"], r2s:["VA"], r3s:["MN"] },
+  "UH-one Hospitalwise":                   { std:[33.00,5.50], r1:[30.00,3.00], r2:[24.00,2.50], r1s:["CO","DC","FL","IN","KY","MI","ND","OH","SC","UT","VA"], r2s:["MN","SD","WA"] },
+  "UH-one Advantage Guard":                { std:[46.25,9.00], r1:[43.25,9.00], r2:[34.25,3.00], r1s:["CO","IN","MI","SC","UT"], r2s:["MN","SD","WA"] },
+  "UH-one DentalWise Basic":               { std:[21.00,21.00], r1:[18.00,18.00], r2:[3.50,3.50], r3:[3.50,3.50], r4:[3.00,3.00], r1s:["CO","FL","SD","WA"], r2s:["NM"], r3s:["RI"], r4s:["NV"] },
+  "UH-one DentalWise 1000":               { std:[33.00,33.00], r1:[27.00,27.00], r2:[9.00,9.00], r3:[6.00,6.00], r4:[3.00,3.00], r1s:["CO","FL","SD","WA"], r2s:["NM"], r3s:["RI"], r4s:["NV"] },
+  "UH-one DentalWise 2000":               { std:[33.00,33.00], r1:[27.00,27.00], r2:[9.00,9.00], r3:[6.00,6.00], r4:[3.00,3.00], r1s:["CO","FL","SD","WA"], r2s:["NM"], r3s:["RI"], r4s:["NV"] },
+  "UH-one DentalWise Max":                { std:[33.00,33.00], r1:[27.00,27.00], r2:[9.00,9.00], r3:[15.00,15.00], r1s:["FL","SD"], r2s:["NM"], r3s:["NV"] },
+  "UH-one Dental Gen":                    { std:[30.00,30.00], r1:[3.00,3.00], r1s:["RI"] },
+  "UH-one Dental Primary":                { std:[18.00,18.00], r1:[3.00,3.00], r1s:["RI"] },
+  "UH-one Dental Premier":                { std:[30.00,30.00], r1:[3.00,3.00], r1s:["RI"] },
+  "UH-one Vision Standalone":             { std:[18.00,18.00], r1:[15.00,15.00], r1s:["DE","FL","IN","KY","MD","NJ","OH","SC","TN","VT"] },
+  "UH-one VisionWise Premier":            { std:[33.00,33.00], r1:[24.00,24.00], r1s:["CO","MN","RI","WA"] },
+  "UH-one CriticalGuard Under 25k":       { std:[36.00,36.00], r1:[18.00,18.00], r2:[9.00,9.00], r1s:["MD","MN","NM","SD","WA"], r2s:["CT"] },
+  "UH-one CriticalGuard 25k Plus":        { std:[45.00,45.00], r1:[42.00,42.00], r2:[27.00,27.00], r3:[15.00,15.00], r1s:["AZ","CO","FL","MI","NC","ND","OH","SC","UT"], r2s:["MD","MN","NM","SD","WA"], r3s:["CT"] },
+  "UH-one Accident ExpenseGuard (82 wks)":{ std:[30.00,30.00], r1:[24.00,24.00], r2:[21.00,21.00], r1s:["AZ","FL","IN","MD","ME","OH","SC","VA"], r2s:["CO","MN","SD"] },
+  "UH-one AccidentWise 10k":              { std:[27.00,27.00], r1:[21.00,21.00], r1s:["MN","SD","WA"] },
+  "UH-one AccidentWise 15k":              { std:[30.00,30.00], r1:[24.00,24.00], r1s:["MN","SD","WA"] },
+  "UH-one AccidentWise 20k":              { std:[30.00,30.00], r1:[24.00,24.00], r1s:["MN","SD","WA"] },
+  "UH-one Accident SafeGuard":            { std:[24.00,6.00],  r1:[21.00,3.00],  r1s:["FL","KY","OH","SC"] },
+};
+function _getUH1Rate(plan, state, age) {
+  var e = _uh1[plan]; if (!e) return null;
+  var st = (state || "").toUpperCase();
+  var col = (age !== null && age !== undefined && parseInt(age) >= 60) ? 1 : 0;
+  var keys = Object.keys(e).filter(function(k){ return k.endsWith("s"); });
+  for (var ki = 0; ki < keys.length; ki++) {
+    var sk = keys[ki];
+    var grp = sk.slice(0, -1); // r1s -> r1
+    if (e[sk].indexOf(st) >= 0 && e[grp]) return e[grp][col];
+  }
+  return e.std ? e.std[col] : null;
+}
+// MOO state-specific rates
+var _mooCI = {
+  national: { "lifetime":77,"30T":77,"20T":77,"15T":68,"10T":59 },
+  g1:       { "lifetime":68,"30T":68,"20T":68,"15T":59,"10T":50 },
+  g2:       { "lifetime":59,"30T":59,"20T":59,"15T":52,"10T":43 },
+  g3:       { "lifetime":52,"30T":52,"20T":52,"15T":46,"10T":37 },
+  g1states: ["AZ","FL","IN","MI","ND","OH","SC","VT","UT"],
+  g2states: ["CO","MD","MA","NJ","NY","SD","WA"],
+  g3states: ["CT","MN"]
+};
+var _mooHosp = { national:56, g1:46, g2:1, g3:16, g4:36, g1states:["CO","DC","FL","IN","KY","MI","ND","OH","SC","TN","UT","VA"], g2states:["CA"], g3states:["NJ"], g4states:["SD","WA"] };
+var _mooDent = { national:45, g1:14, g2:26.2, g1states:["NV"], g2states:["RI"] };
+function _getMOORate(plan, state, term) {
+  var st = (state || "").toUpperCase();
+  if (plan && plan.indexOf("Critical Illness") >= 0) {
+    var t = (term || "lifetime").toLowerCase();
+    var grp = _mooCI.g3states.indexOf(st)>=0?"g3":_mooCI.g2states.indexOf(st)>=0?"g2":_mooCI.g1states.indexOf(st)>=0?"g1":"national";
+    return _mooCI[grp][t] || _mooCI[grp]["lifetime"];
+  }
+  if (plan === "M.O.O Hospital Indemnity") {
+    var h = _mooHosp;
+    return h.g4states.indexOf(st)>=0?h.g4:h.g3states.indexOf(st)>=0?h.g3:h.g2states.indexOf(st)>=0?h.g2:h.g1states.indexOf(st)>=0?h.g1:h.national;
+  }
+  if (plan === "M.O.O. Dental") {
+    return _mooDent.g2states.indexOf(st)>=0?_mooDent.g2:_mooDent.g1states.indexOf(st)>=0?_mooDent.g1:_mooDent.national;
+  }
+  return null;
+}
+function est(rate, prem, opts, advMo, state, age, term) {
+  if (!prem || isNaN(prem)) return 0;
+  var adv = advMo || 9;
+  var st = (state || "").toUpperCase();
+  var a = (age !== null && age !== undefined) ? parseInt(age) : null;
+  // UH1: full state+age lookup
+  if (opts && opts.uh1) {
+    var r = _getUH1Rate(opts.plan, st, a);
+    if (!r) return 0;
+    if (opts.noAdv) return Math.round((r/100) * prem);
+    return Math.round((r/100) * prem * (opts.advMonths || adv));
+  }
+  // MOO state-specific
+  if (opts && opts.mooState) {
+    var mr = _getMOORate(opts.plan, st, opts.term || term);
+    if (!mr) return 0;
+    return Math.round((mr/100) * prem * adv);
+  }
+  if (!rate) return 0;
+  if (opts && opts.noAdv) return Math.round((rate/100) * prem);
+  if (opts && opts.advMonths) return Math.round((rate/100) * prem * opts.advMonths);
+  if (opts && opts.moo) return Math.round((rate/100) * prem * adv);
+  return Math.round((rate/100) * prem * adv);
+}
 
 const ABBR = {
   "ACA": "ACA", "Americas HealthShare Red": "AHS Red", "Americas HealthShare Blue": "AHS Blue",
